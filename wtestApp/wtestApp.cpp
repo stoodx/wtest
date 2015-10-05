@@ -4,10 +4,21 @@
 #include "stdafx.h"
 #include "../wtest/wtest.h"
 
+using namespace stoodx;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	stoodx::wtest::isProcessRunning(L"chrome");
+	std:: wstring strProc(L"firefox");
+	if (!wtest::isProcessRunning(strProc))
+	{
+		_tprintf(_T("No process: %s\n"), strProc.c_str());
+	}
+	else
+	{
+		_tprintf(_T("Have the process: %s\n"), strProc.c_str());
+	}
+
+	std::system("PAUSE");
 	return 0;
 }
 
