@@ -10,7 +10,7 @@ namespace stoodx
 	public:
 		~wtest() {};
 		static int getProcessIdByName(const std::wstring& strName);
-		static bool isTaskExists(const std::wstring& strTaskName);
+		static bool doesTaskExists(const std::wstring& strTaskName);
 		static bool isProcessRunning(const std::wstring& strProcessName);
 		static bool isProcessRunning(unsigned long dwProcId);
 		static bool isDllInProcess(const std::wstring& strDllName,

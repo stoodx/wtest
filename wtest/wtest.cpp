@@ -3,6 +3,7 @@
 #include <locale> 
 
 #include "wtest.h"
+#include "TaskScheduler.h"
 
 using namespace stoodx;
 
@@ -56,9 +57,10 @@ bool wtest::isProcessRunning(DWORD dwProcId)
 	return false;
 }
 
-bool wtest::isTaskExists(const std::wstring& strTaskName)
+bool wtest::doesTaskExists(const std::wstring& strTaskName)
 {
-	return false;
+	TaskScheduler ts;
+	return ts.doesTaskExists(strTaskName);
 }
 
 int wtest::getProcessIdByName(const std::wstring& strName)
