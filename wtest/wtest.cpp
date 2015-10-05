@@ -22,12 +22,13 @@ bool wtest::isProcessRunning(const std::wstring& strProcessName)
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return bRes;
 	}
-	
+
 	bRes = pWtest->FindProcessByName(strProcessName);
 	delete pWtest;
 	SetLastError(ERROR_SUCCESS);
 	return bRes;
 }
+
 
 bool wtest::isDllInProcess(const std::wstring& strDllName,
 					const std::wstring& strProcessName)
@@ -50,7 +51,17 @@ bool wtest::isDllInProcess(const std::wstring& strDllName,
 	return true;
 }
 
-int wtest::GetProcessIDByName(const std::wstring& strName)
+bool wtest::isProcessRunning(DWORD dwProcId)
+{
+	return false;
+}
+
+bool wtest::isTaskExists(const std::wstring& strTaskName)
+{
+	return false;
+}
+
+int wtest::getProcessIdByName(const std::wstring& strName)
 {
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -77,7 +88,7 @@ int wtest::GetProcessIDByName(const std::wstring& strName)
 
 bool wtest::FindProcessByName(const std::wstring& strName)
 {
-	if (GetProcessIDByName(strName))
+	if (getProcessIdByName(strName))
 		return true;
 
 	//try to low case
@@ -85,22 +96,24 @@ bool wtest::FindProcessByName(const std::wstring& strName)
 	std::locale loc;
 	 for(auto elem : strName)
 		 strLow +=  std::tolower(elem, loc);
-	 if (GetProcessIDByName(strLow))
+	 if (getProcessIdByName(strLow))
 		 return true;
+
 	 //try once again
 	 strLow.append(L".exe");
-	 if (GetProcessIDByName(strLow))
+	 if (getProcessIdByName(strLow))
 		 return true;
 
 	 //try to upper case
 	std::wstring strUp(L"");
 	 for(auto elem : strName)
 		 strUp +=  std::toupper(elem, loc);
-	 if (GetProcessIDByName(strUp))
+	 if (getProcessIdByName(strUp))
 		 return true;
+
 	 //try once again
 	 strUp.append(L".EXE");
-	 if (GetProcessIDByName(strUp))
+	 if (getProcessIdByName(strUp))
 		 return true;
 	 else
 		return false;
