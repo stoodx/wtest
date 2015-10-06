@@ -3,8 +3,10 @@
 
 #include "stdafx.h"
 #include "../wtest/wtest.h"
+#include "DTTester.h"
 
 using namespace stoodx;
+
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -36,7 +38,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		_tprintf(_T("The process %d isn't exist.\n"), dwPid);
 	}
 
+	int nResult = DTTester();
+
 	std::system("PAUSE");
-	return 0;
+	return nResult;
 }
 
