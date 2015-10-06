@@ -1,20 +1,23 @@
 #pragma once
 #include <string>
+#include <vector>
 
 namespace stoodx
 {
 	class wtest
 	{
 		wtest() {};
-		bool FindProcessByName(const std::wstring& strName);
+		bool FindProcessByName(const std::wstring& strName,  unsigned& dwPID);
+		int FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pvecListModules);
+
 	public:
 		~wtest() {};
-		static int getProcessIdByName(const std::wstring& strName);
+		static unsigned getProcessIdByName(const std::wstring& strName);
 		static bool doesTaskExists(const std::wstring& strTaskName);
 		static bool isProcessRunning(const std::wstring& strProcessName);
-		static bool isProcessRunning(unsigned long dwProcId);
+		static bool isProcessRunning(unsigned dwProcId);
 		static bool isDllInProcess(const std::wstring& strDllName,
-							const std::wstring& strProcessName);
+								const std::wstring& strProcessName);
 	};
 }
 

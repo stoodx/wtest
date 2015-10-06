@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <locale> 
+#include <Psapi.h>
 
 #include "wtest.h"
 #include "TaskScheduler.h"
@@ -23,8 +24,9 @@ bool wtest::isProcessRunning(const std::wstring& strProcessName)
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return bRes;
 	}
-
-	bRes = pWtest->FindProcessByName(strProcessName);
+	
+	unsigned dwPID = 0;
+	bRes = pWtest->FindProcessByName(strProcessName, dwPID);
 	delete pWtest;
 	SetLastError(ERROR_SUCCESS);
 	return bRes;
@@ -39,20 +41,77 @@ bool wtest::isDllInProcess(const std::wstring& strDllName,
 		SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}
+
+	bool bRes = false;
 	wtest* pWtest = NULL;
 	pWtest = new wtest;
 	if (pWtest == NULL)
 	{
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-		return false;
+		return bRes;
+	}
+
+	unsigned dwPID = 0;
+	if (!pWtest->FindProcessByName(strProcessName, dwPID))
+	{//no such process
+		delete pWtest;
+		SetLastError(ERROR_INVALID_DATA);
+		return bRes;
+	}
+	std::vector<std::wstring> vecListDLL;
+	unsigned nModules = 0;
+	nModules = pWtest->FindAllModulesOfProcess(dwPID, &vecListDLL);
+	if (nModules)
+	{
+		bRes = true;
 	}
 
 	delete pWtest;
 	SetLastError(ERROR_SUCCESS);
-	return true;
+	return bRes;
 }
 
-bool wtest::isProcessRunning(DWORD dwProcId)
+int wtest::FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pvecListModules)
+{
+	//return size number
+    HMODULE hMods[1024];
+    HANDLE hProcess;
+    DWORD cbNeeded;
+    unsigned i;
+
+    // Get a handle to the process.
+    hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
+                            PROCESS_VM_READ,
+							FALSE, dwPID );
+	Sleep(1000);
+    if (NULL == hProcess)
+        return 0;
+
+   // Get a list of all the modules in this process.
+    if( EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
+    {
+        for ( i = 0; i < (cbNeeded / sizeof(HMODULE)); i++ )
+        {
+			TCHAR strModName[MAX_PATH] = {0};
+
+            // Get the full path to the module's file.
+            if ( GetModuleFileNameEx( hProcess, hMods[i], strModName,
+                                      sizeof(strModName) / sizeof(TCHAR)))
+            {
+				std::wstring str(strModName);
+				pvecListModules->push_back(str);
+            }
+        }
+    }
+    
+    // Release the handle to the process.
+    CloseHandle( hProcess );
+
+	return pvecListModules->empty() ? 0 : pvecListModules->size();
+}
+
+
+bool wtest::isProcessRunning(unsigned dwProcId)
 {
 	return false;
 }
@@ -63,8 +122,14 @@ bool wtest::doesTaskExists(const std::wstring& strTaskName)
 	return ts.doesTaskExists(strTaskName);
 }
 
-int wtest::getProcessIdByName(const std::wstring& strName)
+unsigned wtest::getProcessIdByName(const std::wstring& strName)
 {
+	//compare only in low case 
+	std::locale loc;
+	std::wstring strLowName(L"");
+	for(auto elem : strName)
+		strLowName +=  std::tolower(elem, loc);
+
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
 
@@ -76,7 +141,12 @@ int wtest::getProcessIdByName(const std::wstring& strName)
 	int nCount = 0;
 	while ( Process32Next(processesSnapshot, &processInfo) )
 	{
-		if ( strName.compare(processInfo.szExeFile) == 0 )
+		// to low case
+		std::wstring strFilename(L"");
+		std::wstring str = processInfo.szExeFile;
+		for(auto elem : str)
+			strFilename +=  std::tolower(elem, loc);
+		if ( strLowName.compare(strFilename) == 0 )
 		{
 			nCount++;
 		}
@@ -88,35 +158,18 @@ int wtest::getProcessIdByName(const std::wstring& strName)
 		return 0;
 }
 
-bool wtest::FindProcessByName(const std::wstring& strName)
+bool wtest::FindProcessByName(const std::wstring& strName,  unsigned& dwPID)
 {
-	if (getProcessIdByName(strName))
-		return true;
-
 	//try to low case
-	std::wstring strLow(L"");
-	std::locale loc;
-	 for(auto elem : strName)
-		 strLow +=  std::tolower(elem, loc);
-	 if (getProcessIdByName(strLow))
-		 return true;
-
+	std::wstring strLow(strName);
+	dwPID =  getProcessIdByName(strLow);
+	if (dwPID)
+		return true;
 	 //try once again
-	 strLow.append(L".exe");
-	 if (getProcessIdByName(strLow))
-		 return true;
-
-	 //try to upper case
-	std::wstring strUp(L"");
-	 for(auto elem : strName)
-		 strUp +=  std::toupper(elem, loc);
-	 if (getProcessIdByName(strUp))
-		 return true;
-
-	 //try once again
-	 strUp.append(L".EXE");
-	 if (getProcessIdByName(strUp))
-		 return true;
-	 else
+	strLow.append(L".exe");
+	dwPID =  getProcessIdByName(strLow);
+	if (dwPID)
+		return true;
+	else
 		return false;
 }

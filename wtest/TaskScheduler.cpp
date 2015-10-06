@@ -5,18 +5,19 @@
 #include <comdef.h>
 #include <tchar.h>
 
-# pragma comment(lib, "taskschd.lib")
+#pragma comment(lib, "taskschd.lib")
 
-TaskScheduler::TaskScheduler(void)
+
+stoodx::TaskScheduler::TaskScheduler(void)
 {
 }
 
 
-TaskScheduler::~TaskScheduler(void)
+stoodx::TaskScheduler::~TaskScheduler(void)
 {
 }
 
-bool TaskScheduler::doesTaskExists(const std::wstring& strTaskName)
+bool stoodx::TaskScheduler::doesTaskExists(const std::wstring& strTaskName)
 {
 	bool bRes = false;
 	std::thread t( [&] ()
