@@ -3,6 +3,10 @@
 #include <locale> 
 #include <Psapi.h>
 
+//#ifdef _DEBUG
+//#include <iostream>
+//#endif // DEBUG
+
 #include "wtest.h"
 #include "TaskScheduler.h"
 
@@ -58,12 +62,26 @@ bool wtest::isDllInProcess(const std::wstring& strDllName,
 		SetLastError(ERROR_INVALID_DATA);
 		return bRes;
 	}
-	std::vector<std::wstring> vecListDLL;
+	std::vector<std::wstring> vecListDll;
 	unsigned nModules = 0;
-	nModules = pWtest->FindAllModulesOfProcess(dwPID, &vecListDLL);
+	nModules = pWtest->FindAllModulesOfProcess(dwPID, &vecListDll);
 	if (nModules)
 	{
-		bRes = true;
+		//dll name to low case 
+		std::locale loc;
+		std::wstring strDllLowName(L"");
+		for(auto elem :  strDllName)
+			 strDllLowName +=  std::tolower(elem, loc);
+		if (strDllLowName.find(L".dll") == std::wstring::npos)
+			strDllLowName.append(L".dll");
+		for(unsigned i = 0; i < nModules; i++)
+		{
+			if (vecListDll[i].find(strDllLowName) != std::wstring::npos)
+			{
+				bRes = true;
+				break;
+			}
+		}
 	}
 
 	delete pWtest;
@@ -88,8 +106,9 @@ int wtest::FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pv
         return 0;
 
    // Get a list of all the modules in this process.
-    if( EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
+    if( EnumProcessModulesEx(hProcess, hMods, sizeof(hMods), &cbNeeded, LIST_MODULES_ALL))
     {
+		std::locale loc;
         for ( i = 0; i < (cbNeeded / sizeof(HMODULE)); i++ )
         {
 			TCHAR strModName[MAX_PATH] = {0};
@@ -98,8 +117,11 @@ int wtest::FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pv
             if ( GetModuleFileNameEx( hProcess, hMods[i], strModName,
                                       sizeof(strModName) / sizeof(TCHAR)))
             {
-				std::wstring str(strModName);
-				pvecListModules->push_back(str);
+				//to low case
+				std::wstring strLowName(L"");
+				for(auto elem : strModName)
+					strLowName +=  std::tolower(elem, loc);
+				pvecListModules->push_back(strLowName);
             }
         }
     }
