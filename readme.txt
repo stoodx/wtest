@@ -9,4 +9,6 @@ Usage:
 				const std::wstring& strProcessName);
 
 Usage:
-	strProcessName  and strDllName can be in low/upper cases, with/without ".exe" 
+	- strProcessName  and strDllName can be in low/upper cases, with/without ".exe"  and ".dll"
+	- if it starts in 32-bit environment, then the function sees only 32-bit DLLs.  
+
