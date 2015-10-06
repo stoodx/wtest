@@ -101,7 +101,6 @@ int wtest::FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pv
     hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
                             PROCESS_VM_READ,
 							FALSE, dwPID );
-	Sleep(1000);
     if (NULL == hProcess)
         return 0;
 
@@ -132,10 +131,29 @@ int wtest::FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pv
 	return pvecListModules->empty() ? 0 : pvecListModules->size();
 }
 
-
 bool wtest::isProcessRunning(unsigned dwProcId)
 {
-	return false;
+	bool bRes = false;
+	PROCESSENTRY32 processInfo;
+	processInfo.dwSize = sizeof(processInfo);
+
+	HANDLE processesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	if ( processesSnapshot == INVALID_HANDLE_VALUE )
+		return 0;
+	Process32First(processesSnapshot, &processInfo);
+
+	while ( Process32Next(processesSnapshot, &processInfo) )
+	{
+		if ( processInfo.th32ProcessID ==  dwProcId)
+		{
+			bRes = true;
+			break;
+		}
+	}
+	CloseHandle(processesSnapshot);
+
+	SetLastError(ERROR_SUCCESS);
+	return bRes;
 }
 
 bool wtest::doesTaskExists(const std::wstring& strTaskName)

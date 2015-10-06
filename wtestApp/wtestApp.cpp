@@ -26,6 +26,15 @@ int _tmain(int argc, _TCHAR* argv[])
 			_tprintf(_T("The process %s doesn't have %s\n"), strProc.c_str(), strDLL.c_str());
 		}
 	}
+	unsigned dwPid = 1524;
+	if (wtest::isProcessRunning(dwPid))
+	{
+		_tprintf(_T("The process %d is exist.\n"), dwPid);
+	}
+	else
+	{
+		_tprintf(_T("The process %d isn't exist.\n"), dwPid);
+	}
 
 	std::system("PAUSE");
 	return 0;
