@@ -1,3 +1,12 @@
+//////////////////////Run//////////////////////////
+Run with admin rights:
+
+wtestApp.exe full_path_to_kit full_path_to_unistall
+
+Example,
+	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat
+////////////////////////////////////////////////
+
 1. static bool isProcessRunning(const std::wstring& strProcessName);
 		
 
@@ -13,3 +22,9 @@ Usage:
 	- if it starts in 32-bit environment, then the function sees only 32-bit DLLs.  
 
 3. bool wtest::isProcessRunning(unsigned dwProcId)
+
+4. bool isFileExist(const wchar_t* strName)
+
+5. bool closeProcess(const wchar_t* strName)
+
+6. bool wtest::isDirectoryExist(const wchar_t* strName)

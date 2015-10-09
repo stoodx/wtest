@@ -18,6 +18,9 @@ namespace stoodx
 		static bool isProcessRunning(unsigned dwProcId);
 		static bool isDllInProcess(const std::wstring& strDllName,
 								const std::wstring& strProcessName);
+		static bool isFileExist(const wchar_t* strName);
+		static bool closeProcess(std::wstring strName);
+		static bool isDirectoryExist(const wchar_t* strName);
 	};
 }
 

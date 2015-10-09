@@ -200,7 +200,6 @@ unsigned wtest::getProcessIdByName(const std::wstring& strName)
 
 bool wtest::FindProcessByName(const std::wstring& strName,  unsigned& dwPID)
 {
-	//try to low case
 	std::wstring strLow(strName);
 	dwPID =  getProcessIdByName(strLow);
 	if (dwPID)
@@ -212,4 +211,75 @@ bool wtest::FindProcessByName(const std::wstring& strName,  unsigned& dwPID)
 		return true;
 	else
 		return false;
+}
+
+bool wtest::isFileExist(const wchar_t* strName)
+{
+	if (!strName)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+	return ::GetFileAttributes(strName) != DWORD(-1);
+}
+
+bool wtest::closeProcess(std::wstring strName)
+{
+	bool bRes = false;
+	if (strName.empty())
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return bRes;
+	}
+
+	//try to low case
+	std::locale loc;
+	std::wstring strLowName(L"");
+	for(auto elem : strName)
+		strLowName +=  std::tolower(elem, loc);
+	if (strLowName.find(L".exe") == std::wstring::npos)
+		strLowName.append(L".exe");
+
+    PROCESSENTRY32 entry;
+    entry.dwSize = sizeof(PROCESSENTRY32);
+
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+    if (Process32First(snapshot, &entry) == TRUE)
+    {
+        while (Process32Next(snapshot, &entry) == TRUE)
+        {
+			if ( strLowName.compare(entry.szExeFile) == 0)
+            {  
+                HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, entry.th32ProcessID);
+				if (TerminateProcess(hProcess, 0))
+					bRes = true;
+                CloseHandle(hProcess);
+				break;
+            }
+        }
+    }
+
+    CloseHandle(snapshot);
+
+	return bRes;
+}
+
+
+bool wtest::isDirectoryExist(const wchar_t* strName)
+{
+	if (!strName)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+	SHFILEINFO shFileInfo;
+	if (SHGetFileInfo(strName, 0, &shFileInfo, sizeof(SHFILEINFO), SHGFI_TYPENAME) != 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

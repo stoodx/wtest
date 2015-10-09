@@ -2,7 +2,7 @@
 class DTTester
 {
 public:
-	DTTester(void);
+	DTTester(const wchar_t* strPathToKit = NULL, const wchar_t* strPathToUninstall = NULL);
 	~DTTester(void);
 	operator int()
 	{
@@ -10,8 +10,10 @@ public:
 	}
 
 private:
-	bool installTracker();
+	bool checkPathToKitAndInstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
+	bool installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
 	bool isTrackerInstalled();
+
 
 	int m_nReturnCode;
 };
