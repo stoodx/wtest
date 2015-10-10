@@ -9,6 +9,8 @@ namespace stoodx
 		wtest() {};
 		bool FindProcessByName(const std::wstring& strName,  unsigned& dwPID);
 		int FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pvecListModules);
+		bool StartProcessAndWaitForFinish(const wchar_t* strProcessName);
+		bool StartProcessAndContinue(const wchar_t* strProcessName);
 
 	public:
 		~wtest() {};
@@ -21,6 +23,7 @@ namespace stoodx
 		static bool isFileExist(const wchar_t* strName);
 		static bool closeProcess(std::wstring strName);
 		static bool isDirectoryExist(const wchar_t* strName);
+		static bool startProcess(const wchar_t* strProcessName, bool bWaitForFinish = false);
 	};
 }
 

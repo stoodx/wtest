@@ -13,6 +13,7 @@ private:
 	bool checkPathToKitAndInstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
 	bool installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
 	bool isTrackerInstalled();
+	bool isTrackerRunning();
 
 
 	int m_nReturnCode;

@@ -18,15 +18,15 @@ using namespace stoodx;
 DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
 	: m_nReturnCode(0)
 {
-	//1. check path to kit and install
+	//1. Check path to kit and install
 	DT_ASSERT(checkPathToKitAndInstall(strPathToKit, strPathToUninstall));
 	// 2. Install the tracker
 	DT_ASSERT(installTracker(strPathToKit, strPathToUninstall));
 	// 3. Check if tracker is installed
 	DT_ASSERT(isTrackerInstalled());	
-	
+	// 4. Check if tracker is running
+	DT_ASSERT(isTrackerRunning());
 
-	// 3. Check if tracker is running
 	// 4. Check if tracker task exists
 	// 10. Check if config was fetched
 	// 11. Check that config is not empty
@@ -62,9 +62,18 @@ bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPat
 
 	if (isTrackerInstalled())
 	{//uninstall kit
+		if (!wtest::startProcess(strPathToUninstall, true))
+		{
+			m_nReturnCode = 1;
+			return false;
+		}
 	}
-	else
-		m_nReturnCode = 0;
+	//install kit
+	if (!wtest::startProcess(strPathToKit, true))
+	{
+		m_nReturnCode = 1;
+		return false;
+	}
 
 	return true;
 }
@@ -86,8 +95,15 @@ bool DTTester::isTrackerInstalled()
 	
 	if (!wtest::isDirectoryExist(strFullPath.c_str()))
 		return false;
-	else
-		return true;
+	strFullPath += L"\\";
+	std::wstring  strOpener_dll(strFullPath), strSystem_health_kit_exe(strFullPath);
+	strOpener_dll.append(L"Opener.dll");
+	strSystem_health_kit_exe.append(L"System health kit.exe");
+	if (!wtest::isFileExist(strOpener_dll.c_str()) || 
+		!wtest::isFileExist(strSystem_health_kit_exe.c_str()))
+		return false;
+
+	return true;
 }
 
 bool DTTester::checkPathToKitAndInstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
@@ -102,4 +118,12 @@ bool DTTester::checkPathToKitAndInstall(const wchar_t* strPathToKit, const wchar
 	}
 
 	return true;
+}
+
+bool DTTester::isTrackerRunning()
+{
+	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
+	std::wstring strTrackerName(L"System health kit.exe");
+	return wtest::isProcessRunning(strTrackerName);
 }

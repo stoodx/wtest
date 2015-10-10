@@ -283,3 +283,76 @@ bool wtest::isDirectoryExist(const wchar_t* strName)
 		return false;
 	}
 }
+
+bool wtest::startProcess(const wchar_t* strProcessName, bool bWaitForFinish)
+{
+	if (!strProcessName)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+	bool bRes = false;
+	wtest* pWtest = NULL;
+	pWtest = new wtest;
+	if (pWtest == NULL)
+	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return bRes;
+	}
+	if (bWaitForFinish)
+		bRes = pWtest->StartProcessAndWaitForFinish(strProcessName);
+	else
+		bRes = pWtest->StartProcessAndContinue(strProcessName);
+	delete pWtest;
+	return bRes;
+}
+
+bool wtest::StartProcessAndWaitForFinish(const wchar_t* strProcessName)
+{
+	if (!strProcessName)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+   PROCESS_INFORMATION processInformation = {0};
+   STARTUPINFO startupInfo                = {0};
+   startupInfo.cb                         = sizeof(startupInfo);
+
+   // Create the process
+   BOOL bResult = CreateProcess(NULL, (LPWSTR)strProcessName, 
+                               NULL, NULL, FALSE, 
+                               NORMAL_PRIORITY_CLASS | /*CREATE_NEW_PROCESS_GROUP |*/ DETACHED_PROCESS, 
+                               NULL, NULL, &startupInfo, &processInformation);
+   if (!bResult)
+	   return false;
+
+    // Successfully created the process.  Wait for it to finish.
+    WaitForSingleObject( processInformation.hProcess, INFINITE );
+ 
+    // Get the exit code.
+	DWORD  dwExitCode = 0;
+    bResult = GetExitCodeProcess(processInformation.hProcess, &dwExitCode);
+    if (!bResult)
+	   return false;
+
+    // Close the handles.
+    CloseHandle( processInformation.hProcess );
+    CloseHandle( processInformation.hThread );
+ 
+	return true;
+}
+
+bool wtest::StartProcessAndContinue(const wchar_t* strProcessName)
+{
+	if (!strProcessName)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+	int nRes = (int)ShellExecute(NULL, NULL, strProcessName, NULL, NULL, SW_SHOWNORMAL);
+
+	if (nRes < 32)
+		return false;
+	else
+		return true;
+}

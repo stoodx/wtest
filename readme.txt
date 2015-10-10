@@ -5,6 +5,9 @@ wtestApp.exe full_path_to_kit full_path_to_unistall
 
 Example,
 	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat
+
+!!!!You should use uninstal.bat from the root directory
+
 ////////////////////////////////////////////////
 
 1. static bool isProcessRunning(const std::wstring& strProcessName);
@@ -28,3 +31,5 @@ Usage:
 5. bool closeProcess(const wchar_t* strName)
 
 6. bool wtest::isDirectoryExist(const wchar_t* strName)
+
+7. bool wtest::startProcess(const wchar_t* strProcessName, bool bWaitForFinish)
