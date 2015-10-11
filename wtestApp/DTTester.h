@@ -10,11 +10,19 @@ public:
 	}
 
 private:
-	bool checkPathToKitAndInstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
+	bool checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
 	bool installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
 	bool isTrackerInstalled();
 	bool isTrackerRunning();
-
+	bool isRunAsAdmin();
+	bool isTrackerTaskExist();
+	bool isConfigFetched();
+	bool isConfigNotEmpty();
+	bool is_snss_analyzerFetched();
+	bool is_snss_analyzerNotEmpty();
+	bool runChrome();
+	bool closeChrome();
+	bool isFINISH();
 
 	int m_nReturnCode;
 };

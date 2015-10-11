@@ -10,13 +10,13 @@ Example,
 
 ////////////////////////////////////////////////
 
-1. static bool isProcessRunning(const std::wstring& strProcessName);
+1. bool isProcessRunning(const std::wstring& strProcessName);
 		
 
 Usage:
 	strProcessName can be in low/upper cases, with/without ".exe" 
 
-2. static bool isDllInProcess(const std::wstring& strDllName,
+2. bool isDllInProcess(const std::wstring& strDllName,
 							
 				const std::wstring& strProcessName);
 
@@ -33,3 +33,7 @@ Usage:
 6. bool wtest::isDirectoryExist(const wchar_t* strName)
 
 7. bool wtest::startProcess(const wchar_t* strProcessName, bool bWaitForFinish)
+
+8. bool wtest::isRunAsAdmin()
+
+9. __int64 getFileSize(const wchar_t* strFileName)

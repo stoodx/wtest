@@ -284,7 +284,7 @@ bool wtest::isDirectoryExist(const wchar_t* strName)
 	}
 }
 
-bool wtest::startProcess(const wchar_t* strProcessName, bool bWaitForFinish)
+bool wtest::startProcess(const wchar_t* strProcessName,  bool bWaitForFinish, const wchar_t* strParameters)
 {
 	if (!strProcessName)
 	{
@@ -302,7 +302,7 @@ bool wtest::startProcess(const wchar_t* strProcessName, bool bWaitForFinish)
 	if (bWaitForFinish)
 		bRes = pWtest->StartProcessAndWaitForFinish(strProcessName);
 	else
-		bRes = pWtest->StartProcessAndContinue(strProcessName);
+		bRes = pWtest->StartProcessAndContinue(strProcessName, strParameters);
 	delete pWtest;
 	return bRes;
 }
@@ -321,7 +321,7 @@ bool wtest::StartProcessAndWaitForFinish(const wchar_t* strProcessName)
    // Create the process
    BOOL bResult = CreateProcess(NULL, (LPWSTR)strProcessName, 
                                NULL, NULL, FALSE, 
-                               NORMAL_PRIORITY_CLASS | /*CREATE_NEW_PROCESS_GROUP |*/ DETACHED_PROCESS, 
+                               NORMAL_PRIORITY_CLASS | DETACHED_PROCESS, 
                                NULL, NULL, &startupInfo, &processInformation);
    if (!bResult)
 	   return false;
@@ -342,17 +342,62 @@ bool wtest::StartProcessAndWaitForFinish(const wchar_t* strProcessName)
 	return true;
 }
 
-bool wtest::StartProcessAndContinue(const wchar_t* strProcessName)
+bool wtest::StartProcessAndContinue(const wchar_t* strProcessName, const wchar_t* strParameters)
 {
 	if (!strProcessName)
 	{
 		SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}
-	int nRes = (int)ShellExecute(NULL, NULL, strProcessName, NULL, NULL, SW_SHOWNORMAL);
+
+	int nRes = (int)ShellExecute(NULL, NULL, L"chrome.exe", strParameters, NULL, SW_SHOWNORMAL);   //new-window-tab 
 
 	if (nRes < 32)
 		return false;
 	else
 		return true;
+}
+
+bool wtest::isRunAsAdmin()
+{
+    bool bRet = false;
+    HANDLE hToken = NULL;
+    if( OpenProcessToken( GetCurrentProcess(),TOKEN_QUERY,&hToken ) ) 
+	{
+        TOKEN_ELEVATION Elevation;
+        DWORD cbSize = sizeof( TOKEN_ELEVATION );
+        if( GetTokenInformation( hToken, TokenElevation, &Elevation, sizeof( Elevation ), &cbSize ) ) 
+		{
+            if (Elevation.TokenIsElevated)
+				bRet = true;
+        }
+    }
+    if( hToken ) 
+	{
+        CloseHandle( hToken );
+    }
+    return bRet;
+}
+
+__int64 wtest::getFileSize(const wchar_t* strFileName)
+{
+	if (!strFileName)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return -1;
+	}
+	HANDLE hFile = CreateFile(strFileName, GENERIC_READ, 
+								FILE_SHARE_READ, NULL, OPEN_EXISTING, 
+								FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile==INVALID_HANDLE_VALUE)
+		return -1; 
+	LARGE_INTEGER liFileSize;
+    if (!GetFileSizeEx(hFile, &liFileSize))
+    {
+        CloseHandle(hFile);
+        return -1; // error condition, could call GetLastError to find out more
+    }
+
+    CloseHandle(hFile);
+    return liFileSize.QuadPart;
 }
