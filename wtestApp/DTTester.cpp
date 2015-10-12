@@ -41,12 +41,12 @@ DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstal
 	//10. Run chrome ( with prev tabs )
 	DT_ASSERT(runChrome());
 	//11. Check if chrome has opener.dll
-	
+	DT_ASSERT(isOpener_dll());
 	//12. Close chrome
-	//Sleep(10000);
-	//DT_ASSERT(closeChrome());
-
-	// 9. Check if folder "temp" was created
+	Sleep(10000);
+	DT_ASSERT(closeChrome());
+	//13. Check if folder "temp" was created
+	DT_ASSERT(isTempCreated());
 
 	DT_ASSERT(isFINISH());
 }
@@ -214,6 +214,29 @@ bool DTTester::is_snss_analyzerNotEmpty()
 	return false;
 }
 
+bool DTTester::isTempCreated()
+{
+	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
+	//define directory of kit
+	wchar_t* strKitName = L"System health kit";
+	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
+	if (!SHGetSpecialFolderPath(NULL, strP, CSIDL_LOCAL_APPDATA, TRUE))
+	{
+		m_nReturnCode = 1;
+		return false;
+	}
+	std::wstring strFullPath(strP);
+	strFullPath += L"\\" ; 
+	strFullPath += strKitName;
+	if (!wtest::isDirectoryExist(strFullPath.c_str()))
+		return false;
+	strFullPath += L"\\";
+	strFullPath += L"temp";	
+
+	return wtest::isDirectoryExist(strFullPath.c_str());
+}
+
 bool DTTester::runChrome()
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
@@ -236,4 +259,11 @@ bool DTTester::closeChrome()
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
 	return wtest::closeProcess(L"chrome");
+}
+
+bool DTTester::isOpener_dll()
+{
+	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
+	return wtest::isDllInProcess(L"opener.dll", L"chrome");
 }

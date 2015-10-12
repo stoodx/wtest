@@ -23,6 +23,8 @@ private:
 	bool runChrome();
 	bool closeChrome();
 	bool isFINISH();
+	bool isOpener_dll();
+	bool isTempCreated();
 
 	int m_nReturnCode;
 };

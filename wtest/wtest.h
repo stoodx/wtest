@@ -7,14 +7,14 @@ namespace stoodx
 	class wtest
 	{
 		wtest() {};
-		bool FindProcessByName(const std::wstring& strName,  unsigned& dwPID);
+		bool FindProcessByName(const std::wstring& strName,  std::vector<unsigned>& vecPIDList);
 		int FindAllModulesOfProcess(unsigned dwPID, std::vector<std::wstring>* pvecListModules);
 		bool StartProcessAndWaitForFinish(const wchar_t* strProcessName);
 		bool StartProcessAndContinue(const wchar_t* strProcessName, const wchar_t* strParameters);
 
 	public:
 		~wtest() {};
-		static unsigned getProcessIdByName(const std::wstring& strName);
+		static bool getProcessIdByName(const std::wstring& strName,  std::vector<unsigned>& vecPIDList);
 		static bool doesTaskExists(const std::wstring& strTaskName);
 		static bool isProcessRunning(const std::wstring& strProcessName);
 		static bool isProcessRunning(unsigned dwProcId);

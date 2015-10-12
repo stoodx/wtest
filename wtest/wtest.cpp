@@ -29,8 +29,8 @@ bool wtest::isProcessRunning(const std::wstring& strProcessName)
 		return bRes;
 	}
 	
-	unsigned dwPID = 0;
-	bRes = pWtest->FindProcessByName(strProcessName, dwPID);
+	std::vector<unsigned> vecPIDList;
+	bRes = pWtest->FindProcessByName(strProcessName, vecPIDList);
 	delete pWtest;
 	SetLastError(ERROR_SUCCESS);
 	return bRes;
@@ -55,8 +55,8 @@ bool wtest::isDllInProcess(const std::wstring& strDllName,
 		return bRes;
 	}
 
-	unsigned dwPID = 0;
-	if (!pWtest->FindProcessByName(strProcessName, dwPID))
+	std::vector<unsigned> vecPIDList;
+	if (!pWtest->FindProcessByName(strProcessName, vecPIDList))
 	{//no such process
 		delete pWtest;
 		SetLastError(ERROR_INVALID_DATA);
@@ -64,23 +64,30 @@ bool wtest::isDllInProcess(const std::wstring& strDllName,
 	}
 	std::vector<std::wstring> vecListDll;
 	unsigned nModules = 0;
-	nModules = pWtest->FindAllModulesOfProcess(dwPID, &vecListDll);
-	if (nModules)
+	int nSize = vecPIDList.size();
+	for (int i = 0; i < nSize; i++)
 	{
-		//dll name to low case 
-		std::locale loc;
-		std::wstring strDllLowName(L"");
-		for(auto elem :  strDllName)
-			 strDllLowName +=  std::tolower(elem, loc);
-		if (strDllLowName.find(L".dll") == std::wstring::npos)
-			strDllLowName.append(L".dll");
-		for(unsigned i = 0; i < nModules; i++)
+		unsigned nPID = vecPIDList.at(i);
+		nModules = pWtest->FindAllModulesOfProcess(nPID, &vecListDll);
+		if (nModules)
 		{
-			if (vecListDll[i].find(strDllLowName) != std::wstring::npos)
+			//dll name to low case 
+			std::locale loc;
+			std::wstring strDllLowName(L"");
+			for(auto elem :  strDllName)
+				 strDllLowName +=  std::tolower(elem, loc);
+			if (strDllLowName.find(L".dll") == std::wstring::npos)
+				strDllLowName.append(L".dll");
+			for(unsigned i = 0; i < nModules; i++)
 			{
-				bRes = true;
-				break;
+				if (vecListDll[i].find(strDllLowName) != std::wstring::npos)
+				{
+					bRes = true;
+					break;
+				}
 			}
+			if (bRes)
+				break;
 		}
 	}
 
@@ -162,7 +169,7 @@ bool wtest::doesTaskExists(const std::wstring& strTaskName)
 	return ts.doesTaskExists(strTaskName);
 }
 
-unsigned wtest::getProcessIdByName(const std::wstring& strName)
+bool wtest::getProcessIdByName(const std::wstring& strName,  std::vector<unsigned>& vecPIDList)
 {
 	//compare only in low case 
 	std::locale loc;
@@ -178,7 +185,6 @@ unsigned wtest::getProcessIdByName(const std::wstring& strName)
 		return 0;
 	Process32First(processesSnapshot, &processInfo);
 
-	int nCount = 0;
 	while ( Process32Next(processesSnapshot, &processInfo) )
 	{
 		// to low case
@@ -188,29 +194,24 @@ unsigned wtest::getProcessIdByName(const std::wstring& strName)
 			strFilename +=  std::tolower(elem, loc);
 		if ( strLowName.compare(strFilename) == 0 )
 		{
-			nCount++;
+			vecPIDList.push_back(processInfo.th32ProcessID);
 		}
 	}
 	CloseHandle(processesSnapshot);
-	if (nCount > 0)
-		return processInfo.th32ProcessID;
-	else
-		return 0;
+	if (vecPIDList.empty())
+		return false;
+	return true;
 }
 
-bool wtest::FindProcessByName(const std::wstring& strName,  unsigned& dwPID)
+bool wtest::FindProcessByName(const std::wstring& strName, std::vector<unsigned>& vecPIDList)
 {
 	std::wstring strLow(strName);
-	dwPID =  getProcessIdByName(strLow);
-	if (dwPID)
-		return true;
 	 //try once again
-	strLow.append(L".exe");
-	dwPID =  getProcessIdByName(strLow);
-	if (dwPID)
+	if (strLow.find(L".exe") == std::wstring::npos)
+		strLow.append(L".exe");
+	if (getProcessIdByName(strLow, vecPIDList))
 		return true;
-	else
-		return false;
+	return false;
 }
 
 bool wtest::isFileExist(const wchar_t* strName)
@@ -332,13 +333,13 @@ bool wtest::StartProcessAndWaitForFinish(const wchar_t* strProcessName)
     // Get the exit code.
 	DWORD  dwExitCode = 0;
     bResult = GetExitCodeProcess(processInformation.hProcess, &dwExitCode);
-    if (!bResult)
-	   return false;
 
     // Close the handles.
     CloseHandle( processInformation.hProcess );
     CloseHandle( processInformation.hThread );
- 
+
+    if (!bResult)
+	   return false; 
 	return true;
 }
 
