@@ -22,7 +22,8 @@ private:
 	bool is_snss_analyzerNotEmpty();
 	bool runChrome();
 	bool closeChrome();
-	bool isFINISH();
+	bool FINISH_TEST();
+	bool START_TEST();
 	bool isOpener_dll();
 	bool isTempCreated();
 

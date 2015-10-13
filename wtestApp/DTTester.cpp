@@ -18,6 +18,7 @@ using namespace stoodx;
 DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
 	: m_nReturnCode(0)
 {
+	DT_ASSERT(START_TEST());
 	//0. Is run as Admin
 	DT_ASSERT(isRunAsAdmin());
 	//1. Check path to kit and install
@@ -48,7 +49,7 @@ DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstal
 	//13. Check if folder "temp" was created
 	DT_ASSERT(isTempCreated());
 
-	DT_ASSERT(isFINISH());
+	DT_ASSERT(FINISH_TEST());
 }
 
 DTTester::~DTTester(void)
@@ -247,12 +248,20 @@ bool DTTester::runChrome()
 	return true;
 }
 
-bool DTTester::isFINISH()
+bool DTTester::FINISH_TEST()
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
 	return true;
 }
+
+bool DTTester::START_TEST()
+{
+	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
+	return true;
+}
+
 
 bool DTTester::closeChrome()
 {
