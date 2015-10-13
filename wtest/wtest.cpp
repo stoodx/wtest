@@ -308,6 +308,51 @@ bool wtest::startProcess(const wchar_t* strProcessName,  bool bWaitForFinish, co
 	return bRes;
 }
 
+bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, const wchar_t* strPassword)
+{
+	if (!strProcessName || !strPassword)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+	STARTUPINFOW su_info;
+	ZeroMemory(&su_info, sizeof(STARTUPINFOW));
+	su_info.cb = sizeof(STARTUPINFOW);
+
+	PROCESS_INFORMATION processInformation;
+	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
+
+	BOOL bResult =  CreateProcessWithLogonW(	L"Administrator", 
+												L"WIN8", //L"localhost",
+												strPassword,
+												LOGON_WITH_PROFILE,//0,
+												strProcessName,
+												NULL,
+												0, //CREATE_NEW_CONSOLE,
+												NULL,
+												NULL,
+												&su_info,
+												&processInformation);
+
+   if (!bResult)
+ 	   return false;
+
+    // Successfully created the process.  Wait for it to finish.
+    WaitForSingleObject( processInformation.hProcess, INFINITE );
+ 
+    // Get the exit code.
+	DWORD  dwExitCode = 0;
+    bResult = GetExitCodeProcess(processInformation.hProcess, &dwExitCode);
+
+    // Close the handles.
+    CloseHandle( processInformation.hProcess );
+    CloseHandle( processInformation.hThread );
+
+    if (!bResult)
+	   return false; 
+	return true;
+}
+
 bool wtest::StartProcessAndWaitForFinish(const wchar_t* strProcessName)
 {
 	if (!strProcessName)

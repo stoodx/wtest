@@ -1,10 +1,10 @@
 //////////////////////Run//////////////////////////
 Run with admin rights:
 
-wtestApp.exe full_path_to_kit full_path_to_unistall
+wtestApp.exe <full_path_to_kit> <full_path_to_unistall> <password>
 
 Example,
-	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat
+	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat admin_password
 
 !!!!You should use uninstal.bat from the root directory
 
@@ -37,3 +37,5 @@ Usage:
 8. bool wtest::isRunAsAdmin()
 
 9. __int64 getFileSize(const wchar_t* strFileName)
+
+10. bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName);

@@ -11,7 +11,7 @@ using namespace stoodx;
 int _tmain(int argc, _TCHAR* argv[])
 {
 
-	int nResult = DTTester(argv[1], argv[2]);
+	int nResult = DTTester(argv[1], argv[2], argv[3]);
 
 	std::system("PAUSE");
 	return nResult;

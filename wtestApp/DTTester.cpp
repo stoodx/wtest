@@ -15,16 +15,16 @@ using namespace stoodx;
 						else\
 							std::cout << "[      OK] " << std::endl;\
 
-DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
+DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPassword)
 	: m_nReturnCode(0)
 {
 	DT_ASSERT(START_TEST());
 	//0. Is run as Admin
-	DT_ASSERT(isRunAsAdmin());
+	//DT_ASSERT(isRunAsAdmin());
 	//1. Check path to kit and install
-	DT_ASSERT(checkPathToKitAndUninstall(strPathToKit, strPathToUninstall));
+	DT_ASSERT(checkPathToKitAndUninstall(strPathToKit, strPathToUninstall, strPassword));
 	//2. Install the tracker
-	DT_ASSERT(installTracker(strPathToKit, strPathToUninstall));
+	DT_ASSERT(installTracker(strPathToKit, strPathToUninstall, strPassword));
 	//3. Check if tracker is installed
 	DT_ASSERT(isTrackerInstalled());	
 	//4. Check if tracker is running
@@ -40,6 +40,7 @@ DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstal
 	//9. Check that snss_analyzer is not empty
 	DT_ASSERT(is_snss_analyzerNotEmpty());
 	//10. Run chrome ( with prev tabs )
+	return;
 	DT_ASSERT(runChrome());
 	//11. Check if chrome has opener.dll
 	DT_ASSERT(isOpener_dll());
@@ -56,7 +57,7 @@ DTTester::~DTTester(void)
 {
 }
 
-bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
+bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPassword)
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 	//chrome iis run?
@@ -72,14 +73,14 @@ bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPat
 
 	if (isTrackerInstalled())
 	{//uninstall kit
-		if (!wtest::startProcess(strPathToUninstall, true))
+		if (!wtest::startProcessAsAdminAndWaitForFinish(strPathToUninstall, strPassword))
 		{
 			m_nReturnCode = 1;
 			return false;
 		}
 	}
 	//install kit
-	if (!wtest::startProcess(strPathToKit, true))
+	if (!wtest::startProcessAsAdminAndWaitForFinish(strPathToKit, strPassword))
 	{
 		m_nReturnCode = 1;
 		return false;
@@ -116,11 +117,12 @@ bool DTTester::isTrackerInstalled()
 	return true;
 }
 
-bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
+bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPassword)
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
-	if (!wtest::isFileExist(strPathToKit) ||
+	if (!strPassword ||
+		!wtest::isFileExist(strPathToKit) ||
 		!wtest::isFileExist(strPathToUninstall))
 	{
 		m_nReturnCode = 1;	
