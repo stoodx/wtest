@@ -2,6 +2,7 @@
 #include <TlHelp32.h>
 #include <locale> 
 #include <Psapi.h>
+#include <userenv.h>
 
 //#ifdef _DEBUG
 //#include <iostream>
@@ -315,6 +316,31 @@ bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, c
 		SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}
+	HANDLE    hToken;
+	BOOL bResult = FALSE;
+	bResult = LogonUser(L"Victor",  NULL, strPassword, LOGON32_LOGON_INTERACTIVE, 
+			LOGON32_PROVIDER_DEFAULT, &hToken);
+   if (!bResult)
+  	   return false;
+
+	LPVOID    lpvEnv;
+	bResult = CreateEnvironmentBlock(&lpvEnv, hToken, TRUE);   
+	if (!bResult)
+	{
+		CloseHandle(hToken);
+  		return false;
+	}
+
+	DWORD     dwSize;
+	wchar_t strUserProfile[_MAX_PATH] = {0};
+	dwSize = sizeof(strUserProfile)/sizeof(wchar_t);
+	bResult = GetUserProfileDirectory(hToken, strUserProfile, &dwSize);
+	if (!bResult)
+	{
+		CloseHandle(hToken);
+  		return false;
+	}
+
 	STARTUPINFOW su_info;
 	ZeroMemory(&su_info, sizeof(STARTUPINFOW));
 	su_info.cb = sizeof(STARTUPINFOW);
@@ -322,20 +348,32 @@ bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, c
 	PROCESS_INFORMATION processInformation;
 	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
 
-	BOOL bResult =  CreateProcessWithLogonW(	L"Administrator", 
-												L"WIN8", //L"localhost",
-												strPassword,
-												LOGON_WITH_PROFILE,//0,
-												strProcessName,
-												NULL,
-												0, //CREATE_NEW_CONSOLE,
-												NULL,
-												NULL,
-												&su_info,
-												&processInformation);
+	DWORD nSizeCompName = MAX_COMPUTERNAME_LENGTH;
+	wchar_t strCompName[MAX_COMPUTERNAME_LENGTH + 1] ={0};
+	bResult  = GetComputerNameW(strCompName, &nSizeCompName); 
+   if (!bResult)
+   {
+	   CloseHandle(hToken);
+  	   return false;
+   }
+
+	bResult =  CreateProcessWithLogonW(	L"Victor", 
+										L".",  //strCompName,	//L"localhost",
+										strPassword,
+										0,//LOGON_WITH_PROFILE,//0,
+										strProcessName,
+										NULL,
+										CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT,
+										lpvEnv,
+										strUserProfile,
+										&su_info,
+										&processInformation);
 
    if (!bResult)
- 	   return false;
+   {
+	   CloseHandle(hToken);
+  	   return false;
+   }
 
     // Successfully created the process.  Wait for it to finish.
     WaitForSingleObject( processInformation.hProcess, INFINITE );
@@ -347,6 +385,7 @@ bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, c
     // Close the handles.
     CloseHandle( processInformation.hProcess );
     CloseHandle( processInformation.hThread );
+	CloseHandle(hToken);
 
     if (!bResult)
 	   return false; 
