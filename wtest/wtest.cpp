@@ -2,11 +2,6 @@
 #include <TlHelp32.h>
 #include <locale> 
 #include <Psapi.h>
-#include <userenv.h>
-
-//#ifdef _DEBUG
-//#include <iostream>
-//#endif // DEBUG
 
 #include "wtest.h"
 #include "TaskScheduler.h"
@@ -309,86 +304,32 @@ bool wtest::startProcess(const wchar_t* strProcessName,  bool bWaitForFinish, co
 	return bRes;
 }
 
-bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, const wchar_t* strPassword)
+
+bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName)
 {
-	if (!strProcessName || !strPassword)
+	if (!strProcessName)
 	{
 		SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}
-	HANDLE    hToken;
-	BOOL bResult = FALSE;
-	bResult = LogonUser(L"Victor",  NULL, strPassword, LOGON32_LOGON_INTERACTIVE, 
-			LOGON32_PROVIDER_DEFAULT, &hToken);
-   if (!bResult)
-  	   return false;
 
-	LPVOID    lpvEnv;
-	bResult = CreateEnvironmentBlock(&lpvEnv, hToken, TRUE);   
-	if (!bResult)
-	{
-		CloseHandle(hToken);
-  		return false;
-	}
+    SHELLEXECUTEINFO shExecInfo;
+    shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+	shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	shExecInfo.hwnd = NULL;
+	shExecInfo.lpVerb = L"runas";
+	shExecInfo.lpFile = strProcessName;
+    shExecInfo.lpParameters = NULL;
+    shExecInfo.lpDirectory = NULL;
+    shExecInfo.nShow = SW_NORMAL;
+    shExecInfo.hInstApp = NULL;
 
-	DWORD     dwSize;
-	wchar_t strUserProfile[_MAX_PATH] = {0};
-	dwSize = sizeof(strUserProfile)/sizeof(wchar_t);
-	bResult = GetUserProfileDirectory(hToken, strUserProfile, &dwSize);
-	if (!bResult)
-	{
-		CloseHandle(hToken);
-  		return false;
-	}
+	if (!ShellExecuteEx(&shExecInfo))
+		return false;
 
-	STARTUPINFOW su_info;
-	ZeroMemory(&su_info, sizeof(STARTUPINFOW));
-	su_info.cb = sizeof(STARTUPINFOW);
+	// Successfully created the process.  Wait for it to finish.
+	WaitForSingleObject( shExecInfo.hProcess, INFINITE );
 
-	PROCESS_INFORMATION processInformation;
-	ZeroMemory(&processInformation, sizeof(PROCESS_INFORMATION));
-
-	DWORD nSizeCompName = MAX_COMPUTERNAME_LENGTH;
-	wchar_t strCompName[MAX_COMPUTERNAME_LENGTH + 1] ={0};
-	bResult  = GetComputerNameW(strCompName, &nSizeCompName); 
-   if (!bResult)
-   {
-	   CloseHandle(hToken);
-  	   return false;
-   }
-
-	bResult =  CreateProcessWithLogonW(	L"Victor", 
-										L".",  //strCompName,	//L"localhost",
-										strPassword,
-										0,//LOGON_WITH_PROFILE,//0,
-										strProcessName,
-										NULL,
-										CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT,
-										lpvEnv,
-										strUserProfile,
-										&su_info,
-										&processInformation);
-
-   if (!bResult)
-   {
-	   CloseHandle(hToken);
-  	   return false;
-   }
-
-    // Successfully created the process.  Wait for it to finish.
-    WaitForSingleObject( processInformation.hProcess, INFINITE );
- 
-    // Get the exit code.
-	DWORD  dwExitCode = 0;
-    bResult = GetExitCodeProcess(processInformation.hProcess, &dwExitCode);
-
-    // Close the handles.
-    CloseHandle( processInformation.hProcess );
-    CloseHandle( processInformation.hThread );
-	CloseHandle(hToken);
-
-    if (!bResult)
-	   return false; 
 	return true;
 }
 

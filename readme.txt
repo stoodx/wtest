@@ -1,10 +1,8 @@
 //////////////////////Run//////////////////////////
-Run with admin rights:
-
-wtestApp.exe <full_path_to_kit> <full_path_to_unistall> <password>
+wtestApp.exe <full_path_to_kit> <full_path_to_unistall>
 
 Example,
-	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat admin_password
+	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat 
 
 !!!!You should use uninstal.bat from the root directory
 
