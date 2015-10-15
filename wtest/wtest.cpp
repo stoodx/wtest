@@ -2,6 +2,7 @@
 #include <TlHelp32.h>
 #include <locale> 
 #include <Psapi.h>
+#include <ShlObj.h>
 
 #include "wtest.h"
 #include "TaskScheduler.h"
@@ -172,6 +173,8 @@ bool wtest::getProcessIdByName(const std::wstring& strName,  std::vector<unsigne
 	std::wstring strLowName(L"");
 	for(auto elem : strName)
 		strLowName +=  std::tolower(elem, loc);
+	if (strLowName.find(L".exe") == std::wstring::npos)
+		strLowName.append(L".exe");
 
 	PROCESSENTRY32 processInfo;
 	processInfo.dwSize = sizeof(processInfo);
@@ -262,6 +265,40 @@ bool wtest::closeProcess(std::wstring strName)
 	return bRes;
 }
 
+bool wtest::closeProcess(unsigned dwPID)
+{
+	if (dwPID < 1)
+	{
+		SetLastError(ERROR_INVALID_DATA);
+		return false;
+	}
+
+	PROCESSENTRY32 entry;
+	entry.dwSize = sizeof(PROCESSENTRY32);
+	bool bRes = false;
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+
+	if (Process32First(snapshot, &entry) == TRUE)
+	{
+		while (Process32Next(snapshot, &entry) == TRUE)
+		{
+			if ( entry.th32ProcessID == dwPID)
+			{  
+				HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, entry.th32ProcessID);
+				if (TerminateProcess(hProcess, 0))
+					bRes = true;
+				CloseHandle(hProcess);
+				break;
+			}
+		}
+	}
+
+	CloseHandle(snapshot);
+
+	return bRes;
+
+}
+
 
 bool wtest::isDirectoryExist(const wchar_t* strName)
 {
@@ -305,7 +342,7 @@ bool wtest::startProcess(const wchar_t* strProcessName,  bool bWaitForFinish, co
 }
 
 
-bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName)
+bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, int nTimeForWait_ms)
 {
 	if (!strProcessName)
 	{
@@ -313,10 +350,36 @@ bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName)
 		return false;
 	}
 
-    SHELLEXECUTEINFO shExecInfo;
+	//define directory of kit
+	wchar_t* strFileName = L"cmd.exe";
+	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
+	if (!SHGetSpecialFolderPath(NULL, strP, CSIDL_SYSTEM, TRUE))
+	{
+		return false;
+	}
+	std::wstring strPathToConsole(strP);
+	strPathToConsole += L"\\" ; 
+	strPathToConsole += strFileName;
+
+
+	PROCESS_INFORMATION processInformation = {0};
+	STARTUPINFO startupInfo                = {0};
+	startupInfo.cb                         = sizeof(startupInfo);
+
+	// Create the process
+	if(!CreateProcess((LPWSTR)strPathToConsole.c_str(), NULL, 
+								NULL, NULL, FALSE, 
+								NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE | CREATE_NEW_PROCESS_GROUP, 
+								NULL, NULL, &startupInfo, &processInformation))
+	{
+		return false;
+	}
+	::ShowWindow((HWND)processInformation.hProcess, SW_HIDE);
+	
+	SHELLEXECUTEINFO shExecInfo;
     shExecInfo.cbSize = sizeof(SHELLEXECUTEINFO);
 	shExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-	shExecInfo.hwnd = NULL;
+	shExecInfo.hwnd = (HWND)processInformation.hProcess;
 	shExecInfo.lpVerb = L"runas";
 	shExecInfo.lpFile = strProcessName;
     shExecInfo.lpParameters = NULL;
@@ -325,10 +388,22 @@ bool wtest::startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName)
     shExecInfo.hInstApp = NULL;
 
 	if (!ShellExecuteEx(&shExecInfo))
+	{
+		// Close the handles.
+		closeProcess(processInformation.dwProcessId);
+		::CloseHandle( processInformation.hProcess );
+		::CloseHandle( processInformation.hThread );
 		return false;
+	}
 
 	// Successfully created the process.  Wait for it to finish.
 	WaitForSingleObject( shExecInfo.hProcess, INFINITE );
+	Sleep(nTimeForWait_ms);
+
+    // Close the handles.
+	closeProcess(processInformation.dwProcessId);;
+    ::CloseHandle( processInformation.hProcess );
+    ::CloseHandle( processInformation.hThread );
 
 	return true;
 }
@@ -340,6 +415,7 @@ bool wtest::StartProcessAndWaitForFinish(const wchar_t* strProcessName)
 		SetLastError(ERROR_INVALID_DATA);
 		return false;
 	}
+
    PROCESS_INFORMATION processInformation = {0};
    STARTUPINFO startupInfo                = {0};
    startupInfo.cb                         = sizeof(startupInfo);
@@ -426,4 +502,9 @@ __int64 wtest::getFileSize(const wchar_t* strFileName)
 
     CloseHandle(hFile);
     return liFileSize.QuadPart;
+}
+
+void wtest::Wait(int nTimeForWait_ms)
+{
+	Sleep(nTimeForWait_ms);
 }

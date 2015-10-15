@@ -36,4 +36,4 @@ Usage:
 
 9. __int64 getFileSize(const wchar_t* strFileName)
 
-10. bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName);
+10. bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName,  int nTimeForWait_ms);

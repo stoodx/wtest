@@ -22,11 +22,13 @@ namespace stoodx
 								const std::wstring& strProcessName);
 		static bool isFileExist(const wchar_t* strName);
 		static bool closeProcess(std::wstring strName);
+		static bool closeProcess(unsigned dwPID);
 		static bool isDirectoryExist(const wchar_t* strName);
 		static bool startProcess(const wchar_t* strProcessName, bool bWaitForFinish = false,  const wchar_t* strParameters = NULL);
-		static bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName);
+		static bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, int nTimeForWait_ms = 0);
 		static bool isRunAsAdmin();
 		static __int64 getFileSize(const wchar_t* strFileName);
+		static void Wait(int nTimeForWait_ms = 0);
 	};
 }
 

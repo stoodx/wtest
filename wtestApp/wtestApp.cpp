@@ -13,7 +13,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	int nResult = DTTester(argv[1], argv[2]);
 
-	std::system("PAUSE");
+	//std::system("PAUSE");
 	return nResult;
 }
 

@@ -26,6 +26,8 @@ private:
 	bool START_TEST();
 	bool isOpener_dll();
 	bool isTempCreated();
+	bool WAIT(int nTimeWait_ms);
+	bool isChromeRunning();
 
 	int m_nReturnCode;
 };

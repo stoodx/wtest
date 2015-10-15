@@ -40,14 +40,15 @@ DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstal
 	//9. Check that snss_analyzer is not empty
 	DT_ASSERT(is_snss_analyzerNotEmpty());
 	//10. Run chrome ( with prev tabs )
-	return;
 	DT_ASSERT(runChrome());
-	//11. Check if chrome has opener.dll
+	//11.is Chrome Running;
+	DT_ASSERT(isChromeRunning());
+	//12. Check if chrome has opener.dll
 	DT_ASSERT(isOpener_dll());
-	//12. Close chrome
-	Sleep(10000);
+	//13. Close chrome
+	DT_ASSERT(WAIT(5000));
 	DT_ASSERT(closeChrome());
-	//13. Check if folder "temp" was created
+	//14. Check if folder "temp" was created
 	DT_ASSERT(isTempCreated());
 
 	DT_ASSERT(FINISH_TEST());
@@ -61,7 +62,7 @@ bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPat
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
-	HWND hwnd = GetActiveWindow();
+	HWND hwnd = ::GetConsoleWindow();
 	//chrome it's run?
 	std::wstring strProcessName(L"chrome");
 	if (wtest::isProcessRunning(strProcessName))
@@ -82,12 +83,11 @@ bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPat
 		}
 	}
 	//install kit
-	if (!wtest::startProcessAsAdminAndWaitForFinish(strPathToKit))
+	if (!wtest::startProcessAsAdminAndWaitForFinish(strPathToKit, 2500))
 	{
 		m_nReturnCode = 1;
 		return false;
 	}
-	::ShowWindow(hwnd, SW_NORMAL);
 
 	return true;
 }
@@ -95,6 +95,7 @@ bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPat
 bool DTTester::isTrackerInstalled()
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
 	//define directory of kit
 	wchar_t* strKitName = L"System health kit";
 	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
@@ -127,6 +128,9 @@ bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wch
 	if (!wtest::isFileExist(strPathToKit) ||
 		!wtest::isFileExist(strPathToUninstall))
 	{
+		std::wcout << L"GetLastError() ="<< GetLastError() << std::endl;
+		std::wcout << L"strPathToKit="<< strPathToKit << std::endl;
+		std::wcout << L"strPathToUninstall="<< strPathToUninstall << std::endl;
 		m_nReturnCode = 1;	
 		return false;
 	}
@@ -239,16 +243,39 @@ bool DTTester::isTempCreated()
 	strFullPath += L"\\";
 	strFullPath += L"temp";	
 
-	return wtest::isDirectoryExist(strFullPath.c_str());
+	int nCount = 0;
+
+	bool bRes = false;
+	while (nCount < 10)
+	{
+		bRes =  wtest::isDirectoryExist(strFullPath.c_str());
+		if (bRes)
+			break;
+		Sleep(1000);
+		nCount ++;
+	}
+	return bRes;
 }
 
 bool DTTester::runChrome()
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
-	if (!wtest::startProcess(L"chrome.exe", false,  L"www.kvy.com.ua www.cnn.com www.ukr.net"))
+	if (!wtest::startProcess(L"chrome.exe", false,  L"www.kvy.com.ua"))
+		return false;
+	if (!wtest::startProcess(L"chrome.exe", false,  L"www.cnn.com"))
+		return false;
+	if (!wtest::startProcess(L"chrome.exe", false,  L"www.ukr.net"))
 		return false;
 
+	return true;
+}
+
+bool DTTester::WAIT(int nTimeWait_ms)
+{
+	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
+	wtest::Wait(nTimeWait_ms);
 	return true;
 }
 
@@ -279,4 +306,25 @@ bool DTTester::isOpener_dll()
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
 	return wtest::isDllInProcess(L"opener.dll", L"chrome");
+}
+
+bool DTTester::isChromeRunning()
+{
+	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+
+	unsigned nProcesses = 0;
+	int nCountFinish = 0;
+	while (nProcesses < 8)
+	{
+		std::vector<unsigned> vecListPID;
+		if (wtest::getProcessIdByName(L"chrome", vecListPID))
+		{
+			nProcesses = vecListPID.size();
+		}
+		Sleep(1000);
+		nCountFinish ++;
+		if (nCountFinish > 10) //10 sec
+			return false;
+	}
+	return true;
 }
