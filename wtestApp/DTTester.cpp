@@ -109,14 +109,20 @@ bool DTTester::isTrackerInstalled()
 	strFullPath += strKitName;
 	
 	if (!wtest::isDirectoryExist(strFullPath.c_str()))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 	strFullPath += L"\\";
 	std::wstring  strOpener_dll(strFullPath), strSystem_health_kit_exe(strFullPath);
 	strOpener_dll.append(L"Opener.dll");
 	strSystem_health_kit_exe.append(L"System health kit.exe");
 	if (!wtest::isFileExist(strOpener_dll.c_str()) || 
 		!wtest::isFileExist(strSystem_health_kit_exe.c_str()))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 
 	return true;
 }
@@ -214,12 +220,16 @@ bool DTTester::is_snss_analyzerNotEmpty()
 	strFullPath += L"\\" ; 
 	strFullPath += strKitName;
 	if (!wtest::isDirectoryExist(strFullPath.c_str()))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 	strFullPath += L"\\";
 	strFullPath += L"snss_analyser.js";	
 
 	if (wtest::getFileSize(strFullPath.c_str()) > 0)
 		return true;
+	m_nReturnCode = 1;
 	return false;
 }
 
@@ -239,7 +249,10 @@ bool DTTester::isTempCreated()
 	strFullPath += L"\\" ; 
 	strFullPath += strKitName;
 	if (!wtest::isDirectoryExist(strFullPath.c_str()))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 	strFullPath += L"\\";
 	strFullPath += L"temp";	
 
@@ -262,11 +275,20 @@ bool DTTester::runChrome()
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
 	if (!wtest::startProcess(L"chrome.exe", false,  L"www.kvy.com.ua"))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 	if (!wtest::startProcess(L"chrome.exe", false,  L"www.cnn.com"))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 	if (!wtest::startProcess(L"chrome.exe", false,  L"www.ukr.net"))
+	{
+		m_nReturnCode = 1;
 		return false;
+	}
 
 	return true;
 }
@@ -324,7 +346,10 @@ bool DTTester::isChromeRunning()
 		Sleep(1000);
 		nCountFinish ++;
 		if (nCountFinish > 10) //10 sec
+		{
+			m_nReturnCode = 1;
 			return false;
+		}
 	}
 	return true;
 }
