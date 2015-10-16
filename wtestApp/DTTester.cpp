@@ -15,41 +15,56 @@ using namespace stoodx;
 						else\
 							std::cout << "[      OK] " << std::endl;\
 
-DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
+DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPause)
 	: m_nReturnCode(0)
+	, m_bPause(false)
 {
 	DT_ASSERT(START_TEST());
 	//0. Is run as Admin
 	//DT_ASSERT(isRunAsAdmin());
 	//1. Check path to kit and install
-	DT_ASSERT(checkPathToKitAndUninstall(strPathToKit, strPathToUninstall));
+	DT_ASSERT(checkPathToKitAndUninstall(strPathToKit, strPathToUninstall, strPause));
+	pause();
 	//2. Install the tracker
 	DT_ASSERT(installTracker(strPathToKit, strPathToUninstall));
+	pause();
 	//3. Check if tracker is installed
 	DT_ASSERT(isTrackerInstalled());	
+	pause();
 	//4. Check if tracker is running
 	DT_ASSERT(isTrackerRunning());
+	pause();
 	//5. Check if tracker task exists
 	DT_ASSERT(isTrackerTaskExist());
+	pause();
 	//6. Check if config was fetched
 	DT_ASSERT(isConfigFetched()); //not released
+	pause();
 	//7. Check that config is not empty
 	DT_ASSERT(isConfigNotEmpty()); //not released
+	pause();
 	//8. Check that snss_analyzer is fetched
 	DT_ASSERT(is_snss_analyzerFetched());
+	pause();
 	//9. Check that snss_analyzer is not empty
 	DT_ASSERT(is_snss_analyzerNotEmpty());
+	pause();
 	//10. Run chrome ( with prev tabs )
 	DT_ASSERT(runChrome());
+	pause();
 	//11.is Chrome Running;
 	DT_ASSERT(isChromeRunning());
+	pause();
 	//12. Check if chrome has opener.dll
 	DT_ASSERT(isOpener_dll());
+	pause();
 	//13. Close chrome
 	DT_ASSERT(WAIT(5000));
 	DT_ASSERT(closeChrome());
+	pause();
 	//14. Check if folder "temp" was created
 	DT_ASSERT(isTempCreated());
+	pause();
 
 	DT_ASSERT(FINISH_TEST());
 }
@@ -127,7 +142,7 @@ bool DTTester::isTrackerInstalled()
 	return true;
 }
 
-bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
+bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPause)
 {
 	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
 
@@ -139,6 +154,12 @@ bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wch
 		std::wcout << L"strPathToUninstall="<< strPathToUninstall << std::endl;
 		m_nReturnCode = 1;	
 		return false;
+	}
+	if (strPause)
+	{
+		std::wstring strPauseHandle(strPause);
+		if (strPauseHandle.compare(L"/by_step") == 0)
+			m_bPause = true;
 	}
 
 	return true;
@@ -352,4 +373,11 @@ bool DTTester::isChromeRunning()
 		}
 	}
 	return true;
+}
+
+void DTTester::pause()
+{
+	if (!m_bPause)
+		return;
+	system("pause");
 }

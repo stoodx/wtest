@@ -2,7 +2,7 @@
 class DTTester
 {
 public:
-	DTTester(const wchar_t* strPathToKit = NULL, const wchar_t* strPathToUninstall = NULL);
+	DTTester(const wchar_t* strPathToKit = NULL, const wchar_t* strPathToUninstall = NULL,  const wchar_t* strPause = NULL);
 	~DTTester(void);
 	operator int()
 	{
@@ -10,7 +10,7 @@ public:
 	}
 
 private:
-	bool checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
+	bool checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPause);
 	bool installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
 	bool isTrackerInstalled();
 	bool isTrackerRunning();
@@ -28,7 +28,9 @@ private:
 	bool isTempCreated();
 	bool WAIT(int nTimeWait_ms);
 	bool isChromeRunning();
+	void pause();
 
 	int m_nReturnCode;
+	bool m_bPause;
 };
 

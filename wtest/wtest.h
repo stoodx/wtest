@@ -14,21 +14,23 @@ namespace stoodx
 
 	public:
 		~wtest() {};
-		static bool getProcessIdByName(const std::wstring& strName,  std::vector<unsigned>& vecPIDList);
-		static bool doesTaskExists(const std::wstring& strTaskName);
+		//processes
+		static bool isRunAsAdmin();
 		static bool isProcessRunning(const std::wstring& strProcessName);
 		static bool isProcessRunning(unsigned dwProcId);
-		static bool isDllInProcess(const std::wstring& strDllName,
-								const std::wstring& strProcessName);
-		static bool isFileExist(const wchar_t* strName);
+		static bool isDllInProcess(const std::wstring& strDllName,	const std::wstring& strProcessName);
+		static bool getProcessIdByName(const std::wstring& strName,  std::vector<unsigned>& vecPIDList);
 		static bool closeProcess(std::wstring strName);
 		static bool closeProcess(unsigned dwPID);
-		static bool isDirectoryExist(const wchar_t* strName);
 		static bool startProcess(const wchar_t* strProcessName, bool bWaitForFinish = false,  const wchar_t* strParameters = NULL);
 		static bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, int nTimeForWait_ms = 0);
-		static bool isRunAsAdmin();
+		//files and directories
+		static bool isFileExist(const wchar_t* strName);
+		static bool isDirectoryExist(const wchar_t* strName);
 		static __int64 getFileSize(const wchar_t* strFileName);
+		//other
 		static void Wait(int nTimeForWait_ms = 0);
+		static bool doesTaskExists(const std::wstring& strTaskName);
 	};
 }
 

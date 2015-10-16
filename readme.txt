@@ -1,10 +1,10 @@
 //////////////////////Run//////////////////////////
-wtestApp.exe <full_path_to_kit> <full_path_to_unistall>
+wtestApp.exe <full_path_to_kit> <full_path_to_unistall> [/by_step]
 
 Example,
-	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstal.bat 
+	wtestApp "System health kit 1.2.15.100617-beta.exe"  uninstall.bat 
 
-!!!!You should use uninstal.bat from the root directory
+!!!!You should use uninstall.bat from the root directory
 
 ////////////////////////////////////////////////
 
