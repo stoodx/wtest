@@ -6,7 +6,7 @@ Example,
 
 !!!!You should use uninstall.bat from the root directory
 
-////////////////////////////////////////////////
+/////////////////////////////////////////////////
 
 1. bool isProcessRunning(const std::wstring& strProcessName);
 		
