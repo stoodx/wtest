@@ -9,6 +9,8 @@ using namespace stoodx;
 #define RETURN_IF_FALSE(x) if(!x) return false
 
 #define RUN_MSG std::cout << "[ RUN      ] " << __FUNCTION__ << std::endl;
+#define RUN_MSG_NOT_IMPLEMENTED std::cout << "[ RUN      ] " << __FUNCTION__ << std::endl;\
+	std::cout << "[ NOT IMPL ] " << __FUNCTION__ << std::endl;
 
 #define DT_ASSERT(x) if(x == false) \
 						{\
@@ -96,13 +98,7 @@ bool DTTester::installTracker(const std::wstring& strInstallerPath)
 bool DTTester::isTrackerInstalled()
 {
 	RUN_MSG;
-
-	wchar_t* wcsTrackerName = L"\\System health kit";
-	wchar_t wcsAppDataPath[_MAX_PATH * sizeof(TCHAR)] = {0};
-	RETURN_IF_FALSE(SHGetSpecialFolderPath(NULL, wcsAppDataPath, CSIDL_LOCAL_APPDATA, TRUE));
-	
-	std::wstring strInstDir(wcsAppDataPath);
-	strInstDir.append(wcsTrackerName);
+	std::wstring strInstDir = getInstDir();
 	RETURN_IF_FALSE(wtest::doesDirectoryExist(strInstDir.c_str()));
 
 	std::wstring strOpenerDllPath(strInstDir);
@@ -127,13 +123,6 @@ bool DTTester::checkParams(void)
 		m_nReturnCode = 1;	
 		return false;
 	}
-	/*if (strPause)
-	{
-		std::wstring strPauseHandle(strPause);
-		if (strPauseHandle.compare(L"/by_step") == 0)
-			m_bPause = true;
-	}*/
-
 	return true;
 }
 
@@ -142,12 +131,6 @@ bool DTTester::isTrackerRunning()
 	RUN_MSG;
 	std::wstring strTrackerName(L"System health kit.exe");
 	return wtest::isProcessRunning(strTrackerName);
-}
-
-bool DTTester::isRunAsAdmin()
-{
-	RUN_MSG
-	return wtest::isRunAsAdmin();
 }
 
 bool DTTester::doesTrackerTaskExist()
@@ -159,22 +142,19 @@ bool DTTester::doesTrackerTaskExist()
 
 bool DTTester::isConfigFetched()
 {
-	RUN_MSG
-
-	return true;
+	RUN_MSG_NOT_IMPLEMENTED;
+	return false;
 }
 
 bool DTTester::isConfigNotEmpty()
 {
-	RUN_MSG
-
-	return true;
+	RUN_MSG_NOT_IMPLEMENTED;
+	return false;
 }
 
 bool DTTester::isSnssAnalyserFetched()
 {
 	RUN_MSG
-
 	//define directory of kit
 	wchar_t* strKitName = L"System health kit";
 	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
@@ -183,99 +163,41 @@ bool DTTester::isSnssAnalyserFetched()
 		m_nReturnCode = 1;
 		return false;
 	}
-	std::wstring strFullPath(strP);
-	strFullPath += L"\\" ; 
-	strFullPath += strKitName;
-	if (!wtest::doesDirectoryExist(strFullPath.c_str()))
-		return false;
-	strFullPath += L"\\";
-	strFullPath += L"snss_analyser.js";	
-
+	std::wstring strFullPath = getInstDir();
+	strFullPath.append(L"\\snss_analyser.js");	
 	return wtest::doesFileExist(strFullPath.c_str());
 }
 
 bool DTTester::isSnssAnalyserNotEmpty()
 {
-	RUN_MSG
-
-	//define directory of kit
-	wchar_t* strKitName = L"System health kit";
-	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
-	if (!SHGetSpecialFolderPath(NULL, strP, CSIDL_LOCAL_APPDATA, TRUE))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	std::wstring strFullPath(strP);
-	strFullPath += L"\\" ; 
-	strFullPath += strKitName;
-	if (!wtest::doesDirectoryExist(strFullPath.c_str()))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	strFullPath += L"\\";
-	strFullPath += L"snss_analyser.js";	
+	RUN_MSG;
+	std::wstring strFullPath = getInstDir();
+	strFullPath.append(L"\\snss_analyser.js");	
 
 	if (wtest::getFileSize(strFullPath.c_str()) > 0)
 		return true;
+	
 	m_nReturnCode = 1;
 	return false;
 }
 
 bool DTTester::isTempCreated()
 {
-	RUN_MSG
+	RUN_MSG;
+	std::wstring strFullPath = getInstDir();
+	strFullPath.append(L"\\temp");	
 
-	//define directory of kit
-	wchar_t* strKitName = L"System health kit";
-	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
-	if (!SHGetSpecialFolderPath(NULL, strP, CSIDL_LOCAL_APPDATA, TRUE))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	std::wstring strFullPath(strP);
-	strFullPath += L"\\" ; 
-	strFullPath += strKitName;
 	RETURN_IF_FALSE(wtest::doesDirectoryExist(strFullPath.c_str()));
-
-	strFullPath += L"\\";
-	strFullPath += L"temp";	
-
-	int nCount = 0;
-
-	bool bRes = false;
-	while (nCount < 10)
-	{
-		bRes =  wtest::doesDirectoryExist(strFullPath.c_str());
-		if (bRes)
-			break;
-		Sleep(1000);
-		nCount ++;
-	}
-	return bRes;
+	return true;
 }
 
 bool DTTester::runChrome()
 {
-	RUN_MSG
+	RUN_MSG;
 
-	if (!wtest::startProcess(L"chrome.exe", false,  L"www.kvy.com.ua"))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	if (!wtest::startProcess(L"chrome.exe", false,  L"www.cnn.com"))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	if (!wtest::startProcess(L"chrome.exe", false,  L"www.ukr.net"))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
+	RETURN_IF_FALSE(wtest::startProcess(L"chrome.exe", false,  L"www.kvy.com.ua"));
+	RETURN_IF_FALSE(wtest::startProcess(L"chrome.exe", false,  L"www.cnn.com"));
+	RETURN_IF_FALSE(wtest::startProcess(L"chrome.exe", false,  L"www.ukr.net"));
 
 	return true;
 }
@@ -335,4 +257,20 @@ void DTTester::pause()
 	if (!m_bPause)
 		return;
 	system("pause");
+}
+
+const std::wstring& DTTester::getInstDir()
+{
+	if(m_strInstDir.empty())
+	{
+		wchar_t* wcsTrackerName = L"\\System health kit";
+		wchar_t wcsAppDataPath[_MAX_PATH * sizeof(TCHAR)] = {0};
+		if(!SHGetSpecialFolderPath(NULL, wcsAppDataPath, CSIDL_LOCAL_APPDATA, TRUE))
+			return m_strInstDir;
+	
+		std::wstring strInstDir(wcsAppDataPath);
+		strInstDir.append(wcsTrackerName);
+		m_strInstDir = strInstDir;
+	}
+	return m_strInstDir;
 }

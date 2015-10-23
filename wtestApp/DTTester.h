@@ -27,17 +27,19 @@ public:
 	bool isOpenerDllInjectedInChrome();
 	bool runChrome();
 	bool closeChrome();
+	bool isTempCreated();
 
 private:
 	bool checkParams(void);
 	bool isRunAsAdmin();
-	bool isTempCreated();
 	void pause();
+	const std::wstring& getInstDir();
 
 	int m_nReturnCode;
 	bool m_bPause;
 	std::wstring m_strInstallerPath;
 	std::wstring m_strUninstallerPath;
+	std::wstring m_strInstDir;
 
 };
 
