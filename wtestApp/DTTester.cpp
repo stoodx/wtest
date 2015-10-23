@@ -6,205 +6,174 @@
 #include "DTTester.h"
 
 using namespace stoodx;
+#define RETURN_IF_FALSE(x) if(!x) return false
+
+#define RUN_MSG std::cout << "[ RUN      ] " << __FUNCTION__ << std::endl;
 
 #define DT_ASSERT(x) if(x == false) \
 						{\
-							std::cout << "[    FAIL] " << std::endl;\
+							std::cout << "[    FAIL ] " << std::endl;\
+							m_nReturnCode = 1;\
 							return;\
 						}\
 						else\
-							std::cout << "[      OK] " << std::endl;\
+							std::cout << "[      OK  ] " << std::endl;\
 
-DTTester::DTTester(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPause)
+DTTester::DTTester(const std::wstring& strInstallerPath,
+				   const std::wstring& strUninstallerPath,
+				   bool bStepByStep)
 	: m_nReturnCode(0)
-	, m_bPause(false)
+	, m_bPause(bStepByStep)
+	, m_strInstallerPath(strInstallerPath)
+	, m_strUninstallerPath(strUninstallerPath)
 {
-	DT_ASSERT(START_TEST());
-	//0. Is run as Admin
-	//DT_ASSERT(isRunAsAdmin());
 	//1. Check path to kit and install
-	DT_ASSERT(checkPathToKitAndUninstall(strPathToKit, strPathToUninstall, strPause));
-	pause();
+	DT_ASSERT(checkParams());
+
 	//2. Install the tracker
-	DT_ASSERT(installTracker(strPathToKit, strPathToUninstall));
-	pause();
+	DT_ASSERT(installTracker(m_strInstallerPath));
+
 	//3. Check if tracker is installed
-	DT_ASSERT(isTrackerInstalled());	
-	pause();
+	DT_ASSERT(isTrackerInstalled());
+/*
 	//4. Check if tracker is running
 	DT_ASSERT(isTrackerRunning());
-	pause();
+
 	//5. Check if tracker task exists
-	DT_ASSERT(isTrackerTaskExist());
-	pause();
+	DT_ASSERT(doesTrackerTaskExist());
+
 	//6. Check if config was fetched
 	DT_ASSERT(isConfigFetched()); //not released
-	pause();
+
 	//7. Check that config is not empty
 	DT_ASSERT(isConfigNotEmpty()); //not released
-	pause();
+
 	//8. Check that snss_analyzer is fetched
-	DT_ASSERT(is_snss_analyzerFetched());
-	pause();
+	DT_ASSERT(isSnssAnalyserFetched());
+
 	//9. Check that snss_analyzer is not empty
-	DT_ASSERT(is_snss_analyzerNotEmpty());
-	pause();
+	DT_ASSERT(isSnssAnalyserNotEmpty());
+
 	//10. Run chrome ( with prev tabs )
 	DT_ASSERT(runChrome());
-	pause();
+
 	//11.is Chrome Running;
 	DT_ASSERT(isChromeRunning());
-	pause();
+
 	//12. Check if chrome has opener.dll
-	DT_ASSERT(isOpener_dll());
-	pause();
+	DT_ASSERT(isOpenerDllInjectedInChrome());
+
 	//13. Close chrome
 	DT_ASSERT(WAIT(5000));
 	DT_ASSERT(closeChrome());
-	pause();
+
 	//14. Check if folder "temp" was created
 	DT_ASSERT(isTempCreated());
-	pause();
 
-	DT_ASSERT(FINISH_TEST());
+	DT_ASSERT(FINISH_TEST());*/
+}
+
+
+DTTester::DTTester(void)
+{
 }
 
 DTTester::~DTTester(void)
 {
 }
 
-bool DTTester::installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall)
+bool DTTester::installTracker(const std::wstring& strInstallerPath)
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG;
+	m_strInstallerPath = strInstallerPath;
 
-	HWND hwnd = ::GetConsoleWindow();
-	//chrome it's run?
-	std::wstring strProcessName(L"chrome");
-	if (wtest::isProcessRunning(strProcessName))
-	{//close chrome
-		if (!wtest::closeProcess(strProcessName))
-		{
-			m_nReturnCode = 1;
-			return false;
-		}
-	}
-
-	if (isTrackerInstalled())
-	{//uninstall kit
-		if (!wtest::startProcessAsAdminAndWaitForFinish(strPathToUninstall))
-		{
-			m_nReturnCode = 1;
-			return false;
-		}
-	}
-	//install kit
-	if (!wtest::startProcessAsAdminAndWaitForFinish(strPathToKit, 2500))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
+	RETURN_IF_FALSE(closeChrome());
+	RETURN_IF_FALSE(wtest::startProcessAsAdminAndWaitForFinish(strInstallerPath.c_str(), 2500));
 
 	return true;
 }
 
 bool DTTester::isTrackerInstalled()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG;
 
-	//define directory of kit
-	wchar_t* strKitName = L"System health kit";
-	wchar_t strP[_MAX_PATH * sizeof(TCHAR)] = {0};
-	if (!SHGetSpecialFolderPath(NULL, strP, CSIDL_LOCAL_APPDATA, TRUE))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	std::wstring strFullPath(strP);
-	strFullPath += L"\\" ; 
-	strFullPath += strKitName;
+	wchar_t* wcsTrackerName = L"\\System health kit";
+	wchar_t wcsAppDataPath[_MAX_PATH * sizeof(TCHAR)] = {0};
+	RETURN_IF_FALSE(SHGetSpecialFolderPath(NULL, wcsAppDataPath, CSIDL_LOCAL_APPDATA, TRUE));
 	
-	if (!wtest::isDirectoryExist(strFullPath.c_str()))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
-	strFullPath += L"\\";
-	std::wstring  strOpener_dll(strFullPath), strSystem_health_kit_exe(strFullPath);
-	strOpener_dll.append(L"Opener.dll");
-	strSystem_health_kit_exe.append(L"System health kit.exe");
-	if (!wtest::isFileExist(strOpener_dll.c_str()) || 
-		!wtest::isFileExist(strSystem_health_kit_exe.c_str()))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
+	std::wstring strInstDir(wcsAppDataPath);
+	strInstDir.append(wcsTrackerName);
+	RETURN_IF_FALSE(wtest::doesDirectoryExist(strInstDir.c_str()));
+
+	std::wstring strOpenerDllPath(strInstDir);
+	std::wstring strTrackerExePath(strInstDir);
+	strOpenerDllPath.append(L"\\Opener.dll");
+	strTrackerExePath.append(L"\\System health kit.exe");
+	RETURN_IF_FALSE(wtest::doesFileExist(strOpenerDllPath.c_str()));
+	RETURN_IF_FALSE(wtest::doesFileExist(strTrackerExePath.c_str()));
 
 	return true;
 }
 
-bool DTTester::checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPause)
+bool DTTester::checkParams(void)
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
-	if (!wtest::isFileExist(strPathToKit) ||
-		!wtest::isFileExist(strPathToUninstall))
+	RUN_MSG;
+	if (!wtest::doesFileExist(m_strInstallerPath.c_str()) ||
+		!wtest::doesFileExist(m_strUninstallerPath.c_str()))
 	{
-		std::wcout << L"GetLastError() ="<< GetLastError() << std::endl;
-		std::wcout << L"strPathToKit="<< strPathToKit << std::endl;
-		std::wcout << L"strPathToUninstall="<< strPathToUninstall << std::endl;
+		std::wcout << L"error: "<< GetLastError() << std::endl;
+		std::wcout << L"installer path: "<< m_strInstallerPath << std::endl;
+		std::wcout << L"uninstaller path: "<< m_strUninstallerPath << std::endl;
 		m_nReturnCode = 1;	
 		return false;
 	}
-	if (strPause)
+	/*if (strPause)
 	{
 		std::wstring strPauseHandle(strPause);
 		if (strPauseHandle.compare(L"/by_step") == 0)
 			m_bPause = true;
-	}
+	}*/
 
 	return true;
 }
 
 bool DTTester::isTrackerRunning()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
+	RUN_MSG;
 	std::wstring strTrackerName(L"System health kit.exe");
 	return wtest::isProcessRunning(strTrackerName);
 }
 
 bool DTTester::isRunAsAdmin()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
+	RUN_MSG
 	return wtest::isRunAsAdmin();
 }
 
-bool DTTester::isTrackerTaskExist()
+bool DTTester::doesTrackerTaskExist()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
+	RUN_MSG;
 	std::wstring strTaskName(L"System Health Kit");
 	return wtest::doesTaskExists(strTaskName);
 }
 
 bool DTTester::isConfigFetched()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
 
 	return true;
 }
 
 bool DTTester::isConfigNotEmpty()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
 
 	return true;
 }
 
-bool DTTester::is_snss_analyzerFetched()
+bool DTTester::isSnssAnalyserFetched()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
 
 	//define directory of kit
 	wchar_t* strKitName = L"System health kit";
@@ -217,17 +186,17 @@ bool DTTester::is_snss_analyzerFetched()
 	std::wstring strFullPath(strP);
 	strFullPath += L"\\" ; 
 	strFullPath += strKitName;
-	if (!wtest::isDirectoryExist(strFullPath.c_str()))
+	if (!wtest::doesDirectoryExist(strFullPath.c_str()))
 		return false;
 	strFullPath += L"\\";
 	strFullPath += L"snss_analyser.js";	
 
-	return wtest::isFileExist(strFullPath.c_str());
+	return wtest::doesFileExist(strFullPath.c_str());
 }
 
-bool DTTester::is_snss_analyzerNotEmpty()
+bool DTTester::isSnssAnalyserNotEmpty()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
 
 	//define directory of kit
 	wchar_t* strKitName = L"System health kit";
@@ -240,7 +209,7 @@ bool DTTester::is_snss_analyzerNotEmpty()
 	std::wstring strFullPath(strP);
 	strFullPath += L"\\" ; 
 	strFullPath += strKitName;
-	if (!wtest::isDirectoryExist(strFullPath.c_str()))
+	if (!wtest::doesDirectoryExist(strFullPath.c_str()))
 	{
 		m_nReturnCode = 1;
 		return false;
@@ -256,7 +225,7 @@ bool DTTester::is_snss_analyzerNotEmpty()
 
 bool DTTester::isTempCreated()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
 
 	//define directory of kit
 	wchar_t* strKitName = L"System health kit";
@@ -269,11 +238,8 @@ bool DTTester::isTempCreated()
 	std::wstring strFullPath(strP);
 	strFullPath += L"\\" ; 
 	strFullPath += strKitName;
-	if (!wtest::isDirectoryExist(strFullPath.c_str()))
-	{
-		m_nReturnCode = 1;
-		return false;
-	}
+	RETURN_IF_FALSE(wtest::doesDirectoryExist(strFullPath.c_str()));
+
 	strFullPath += L"\\";
 	strFullPath += L"temp";	
 
@@ -282,7 +248,7 @@ bool DTTester::isTempCreated()
 	bool bRes = false;
 	while (nCount < 10)
 	{
-		bRes =  wtest::isDirectoryExist(strFullPath.c_str());
+		bRes =  wtest::doesDirectoryExist(strFullPath.c_str());
 		if (bRes)
 			break;
 		Sleep(1000);
@@ -293,7 +259,7 @@ bool DTTester::isTempCreated()
 
 bool DTTester::runChrome()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
 
 	if (!wtest::startProcess(L"chrome.exe", false,  L"www.kvy.com.ua"))
 	{
@@ -314,46 +280,35 @@ bool DTTester::runChrome()
 	return true;
 }
 
-bool DTTester::WAIT(int nTimeWait_ms)
-{
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
-	wtest::Wait(nTimeWait_ms);
-	return true;
-}
-
-bool DTTester::FINISH_TEST()
-{
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
-	return true;
-}
-
-bool DTTester::START_TEST()
-{
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
-
-	return true;
-}
-
-
 bool DTTester::closeChrome()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG;
+	//Close chrome
+	std::wstring strProcessName(L"chrome");
+	if (wtest::isProcessRunning(strProcessName))
+	{
+		if (!wtest::closeProcess(strProcessName))
+		{
+			m_nReturnCode = 1;
+			return false;
+		}
+	}
 
-	return wtest::closeProcess(L"chrome");
+	return true;
 }
 
-bool DTTester::isOpener_dll()
+bool DTTester::isOpenerDllInjectedInChrome()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	RUN_MSG
+
 
 	return wtest::isDllInProcess(L"opener.dll", L"chrome");
 }
 
 bool DTTester::isChromeRunning()
 {
-	std::cout << "[RUN     ] " << __FUNCTION__ << std::endl;
+	
+	RUN_MSG
 
 	unsigned nProcesses = 0;
 	int nCountFinish = 0;

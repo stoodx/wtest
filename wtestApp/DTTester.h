@@ -2,35 +2,42 @@
 class DTTester
 {
 public:
-	DTTester(const wchar_t* strPathToKit = NULL, const wchar_t* strPathToUninstall = NULL,  const wchar_t* strPause = NULL);
+	DTTester(const std::wstring& strInstallerPath,
+			 const std::wstring& strUnistallerPath = L"",
+			 bool bStepByStep = false);
+	
+	DTTester();
+
 	~DTTester(void);
 	operator int()
 	{
 		return m_nReturnCode;
 	}
 
-private:
-	bool checkPathToKitAndUninstall(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall, const wchar_t* strPause);
-	bool installTracker(const wchar_t* strPathToKit, const wchar_t* strPathToUninstall);
+	bool installTracker(const std::wstring& strInstallerPath);
+	bool uninstallTracker(const std::wstring& strUninstallerPath);
 	bool isTrackerInstalled();
 	bool isTrackerRunning();
-	bool isRunAsAdmin();
-	bool isTrackerTaskExist();
+	bool doesTrackerTaskExist();
 	bool isConfigFetched();
 	bool isConfigNotEmpty();
-	bool is_snss_analyzerFetched();
-	bool is_snss_analyzerNotEmpty();
+	bool isSnssAnalyserFetched();
+	bool isSnssAnalyserNotEmpty();
+	bool isChromeRunning();
+	bool isOpenerDllInjectedInChrome();
 	bool runChrome();
 	bool closeChrome();
-	bool FINISH_TEST();
-	bool START_TEST();
-	bool isOpener_dll();
+
+private:
+	bool checkParams(void);
+	bool isRunAsAdmin();
 	bool isTempCreated();
-	bool WAIT(int nTimeWait_ms);
-	bool isChromeRunning();
 	void pause();
 
 	int m_nReturnCode;
 	bool m_bPause;
+	std::wstring m_strInstallerPath;
+	std::wstring m_strUninstallerPath;
+
 };
 

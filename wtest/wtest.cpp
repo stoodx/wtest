@@ -213,7 +213,7 @@ bool wtest::FindProcessByName(const std::wstring& strName, std::vector<unsigned>
 	return false;
 }
 
-bool wtest::isFileExist(const wchar_t* strName)
+bool wtest::doesFileExist(const wchar_t* strName)
 {
 	if (!strName)
 	{
@@ -300,7 +300,7 @@ bool wtest::closeProcess(unsigned dwPID)
 }
 
 
-bool wtest::isDirectoryExist(const wchar_t* strName)
+bool wtest::doesDirectoryExist(const wchar_t* strName)
 {
 	if (!strName)
 	{

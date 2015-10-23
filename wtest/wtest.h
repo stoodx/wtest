@@ -25,8 +25,8 @@ namespace stoodx
 		static bool startProcess(const wchar_t* strProcessName, bool bWaitForFinish = false,  const wchar_t* strParameters = NULL);
 		static bool startProcessAsAdminAndWaitForFinish(const wchar_t* strProcessName, int nTimeForWait_ms = 0);
 		//files and directories
-		static bool isFileExist(const wchar_t* strName);
-		static bool isDirectoryExist(const wchar_t* strName);
+		static bool doesFileExist(const wchar_t* strName);
+		static bool doesDirectoryExist(const wchar_t* strName);
 		static __int64 getFileSize(const wchar_t* strFileName);
 		//other
 		static void Wait(int nTimeForWait_ms = 0);

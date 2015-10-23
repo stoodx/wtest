@@ -4,16 +4,15 @@
 #include "stdafx.h"
 #include "../wtest/wtest.h"
 #include "DTTester.h"
-
+#include <gtest\gtest.h>
 using namespace stoodx;
 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-
-	int nResult = DTTester(argv[1], argv[2], argv[3]);
-
-	//std::system("PAUSE");
-	return nResult;
+	::testing::InitGoogleTest(&argc, argv);
+	int nRes = RUN_ALL_TESTS();
+	system("pause");
+	return nRes;
 }
 
